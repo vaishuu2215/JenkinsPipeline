@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+
+    environment {
+        TF_WORK_DIR = "${WORKSPACE}\\terraform" // Adjust path if needed
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                echo "Checking out code from Git"
+                git url: 'https://github.com/vaishuu2215/JenkinsPipeline.git', branch: 'main'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir("${TF_WORK_DIR}") {
+                    echo "Running terraform init"
+                    bat 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir("${TF_WORK_DIR}") {
+                    echo "Running terraform plan"
+                    bat 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir("${TF_WORK_DIR}") {
+                    echo "Running terraform apply"
+                    bat 'terraform apply -auto-approve tfplan'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Terraform run completed successfully."
+        }
+        failure {
+            echo "❌ Terraform run failed."
+        }
+    }
+}
